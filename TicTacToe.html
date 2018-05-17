@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TicTacToe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.js"></script>
+    <link rel="stylesheet" href="./Style/Style.css">
+</head>
+<body>
+<div id="TicTacToe"></div>
+<script type="text/babel">
+// Чистый компонент ячейки
+function Square(props){
+    return <button className="square" onClick={props.returnSquareNumber}>{props.value}</button>
+}
+
+class Board extends React.Component{
+    drawSquare(i){
+        return <Square returnSquareNumber={() => this.props.clickHandler(i)} value={this.props.squares[i]} />
+    }
+    render(){
+        return (
+            <div>
+              <div className="board-row">
+                     {this.drawSquare(0)}
+                     {this.drawSquare(1)}
+                     {this.drawSquare(2)}
+              </div>
+              <div className="board-row">
+                     {this.drawSquare(3)}
+                     {this.drawSquare(4)}
+                     {this.drawSquare(5)}
+              </div>
+              <div className="board-row">
+                     {this.drawSquare(6)}
+                     {this.drawSquare(7)}
+                     {this.drawSquare(8)}
+              </div>
+            </div>
+        )
+    }
+}
+
+class Game extends React.Component{
+    constructor(props){
+        super(props)
+        this.state = {
+            history: [{squares: Array(9).fill(null)}],
+            isX: true,
+            stepNumber:0
+        }
+    }
+    clickHandler(i){
+        const  history = this.state.history.slice(0, this.state.stepNumber + 1);
+        const current = history[history.length - 1];
+        const squares =  current.squares.slice();
+
+        if(checkWinner(squares) || squares[i]){
+            return
+        }
+        squares[i] = this.state.isX? "X" : "O";
+        this.setState((prev)=>({
+            history: history.concat([{ squares: squares}]),
+            isX: !prev.isX,
+            stepNumber: history.length
+        }))
+
+
+    }
+
+    jumpToStep(step){
+        this.setState({
+            isX: (step % 2) === 0,
+            stepNumber: step,
+        })
+    }
+    render(){
+        const history = this.state.history;
+        const current = history[this.state.stepNumber];
+        const steps = history.map((squares,index)=>{
+            const buttonTitle = index? "Шаг #" +  index: "В начало игры";
+            return (
+                    <li key={index}><button onClick={() => this.jumpToStep(index)}>{buttonTitle}</button></li>
+            )
+
+        })
+
+        let status
+        let checkResult =checkWinner(current.squares)
+        if(checkResult){
+            status = "Победа " + checkResult
+        } else {
+            status = "Следующий ход: " + (this.state.isX? "X" : "O")
+        }
+        return(
+            <div className="game">
+                <div>
+                    <Board clickHandler={(i)=>this.clickHandler(i)} squares={current.squares} />
+                </div>
+                <div className="game-info">
+                    <div>{status}</div>
+                    <ol>{steps}</ol>
+                </div>
+            </div>
+        )
+    }
+}
+
+ReactDOM.render(<Game />,TicTacToe)
+
+/*Вспомогательная функция, которая по массиву ячеек игровой доски проверяет есть ли победитель и если есть, то кто*/
+function checkWinner(sqrs){
+    const winnerCases = [
+        [0,1,2],
+        [3,4,5],
+        [6,7,8],
+        [0,3,6],
+        [1,4,7],
+        [2,5,8],
+        [0,4,8],
+        [2,4,6]
+    ];
+    for(let caseIndex in winnerCases){
+        let [a,b,c] = winnerCases[caseIndex]
+        if(sqrs[a] && sqrs[a] === sqrs[b] && sqrs[a] == sqrs[c]){
+           return sqrs[a]
+        }
+
+    }
+
+    return null
+}
+</script>
+</body>
+</html>
